@@ -1,0 +1,105 @@
+import org.springframework.boot.gradle.tasks.run.BootRun
+
+buildscript {
+	ext {
+		springBootVersion = '2.3.3.RELEASE'
+		springCloudVersion = '2.2.4.RELEASE'
+
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath "org.openapitools:openapi-generator-gradle-plugin:4.3.1"
+	}
+}
+
+plugins {
+	id 'com.adarshr.test-logger' version '1.6.0'
+	id 'org.springframework.boot' version '2.3.3.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id "org.sonarqube" version "3.0"
+	id 'java'
+	id 'jacoco'
+}
+
+apply plugin: 'org.openapi.generator'
+apply plugin: 'java'
+apply plugin: 'jacoco'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.kamal'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+configurations {
+	developmentOnly
+	runtimeClasspath {
+		extendsFrom developmentOnly
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+task testJar(type: Jar) {
+	classifier = 'tests'
+	from sourceSets.test.compileClasspath
+}
+springBoot {
+	buildInfo()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+	implementation group: 'io.swagger', name: 'swagger-annotations', version: '1.5.9'
+	implementation group: 'org.openapitools', name: 'jackson-databind-nullable', version: '0.2.2'
+
+}
+
+testlogger {
+	theme 'standard'
+	slowThreshold 2000
+}
+
+test {
+	systemProperty 'spring.profiles.active', 'local'
+}
+
+task bootRunDev(type: BootRun) {
+	group = 'Application'
+
+	doFirst() {
+		main = bootJar.mainClassName
+		classpath = sourceSets.main.runtimeClasspath
+		systemProperty 'spring.profiles.active', 'local'
+	}
+}
+
+openApiGenerate{
+	generatorName = 'spring'
+	inputSpec = "$rootDir/src/main/resources/user-registration.yml".toString()
+	outputDir = "$rootDir".toString()
+	apiPackage = "com.kamal.challenge.api"
+	invokerPackage = "com.kamal.challenge"
+	modelPackage = "com.kamal.challenge.model"
+	modelFilesConstrainedTo = []
+	configOptions = [
+			additionalModelTypeAnnotations: "@lombok.Builder @lombok.NoArgsConstructor @lombok.AllArgsConstructor"
+	]
+}

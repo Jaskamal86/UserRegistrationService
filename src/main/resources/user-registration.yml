@@ -1,0 +1,98 @@
+openapi: 3.0.0
+info:
+  title: User Registration API
+  description: |
+    API for User Registrations
+  version: 1.0.6
+servers:
+  - url: '{protocol}://localhost:8080/v1'
+    description: Base url
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: https
+tags:
+  - name: UserRegistration
+    description: User Registration API for managing user information - creating, retrieving and updating
+paths:
+  /user/create:
+    post:
+      tags:
+        - CreateUserAccount
+      summary: Create User Account
+      description: Create User Account
+      operationId: CreateUserAccount
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUserRequest'
+      responses:
+        "201":
+          $ref: '#/components/responses/CreateUserResponse'
+        "400":
+          $ref: '#/components/responses/ErrorResponse'
+        "401":
+          $ref: '#/components/responses/UnauthorizedError'
+        "404":
+          description: Resource Not Found
+        "500":
+          description: Internal Server Error
+components:
+  schemas:
+    CreateUserResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    CreateUserRequest:
+      type: object
+      required:
+        - username
+        - password
+        - ipaddress
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          pattern: '^(?=.*[A-Z])(?=.*\d)(?=.*[_#$%.])[A-Za-z\d@$!%*?&]{8,}$'
+        ipaddress:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        variant:
+          type: string
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      headers:
+        WWW_Authenticate:
+          style: simple
+          explode: false
+          schema:
+            type: string
+    CreateUserResponse:
+      description: Create User Response with details
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateUserResponse'
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  requestBodies:
+    CreateUserRequest:
+      description: Create Card Request
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateUserRequest'
